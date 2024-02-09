@@ -6,6 +6,8 @@ from datetime import date
 from watchdog.observers import Observer
 from watchdog.events import LoggingEventHandler
 
+from handler import CrawlerHandler
+
 class Listener:
     ""
     ""
@@ -28,8 +30,10 @@ class Listener:
     def run(self): 
         
         print('Running')
-        event_handler = LoggingEventHandler()
-        self.observer.schedule(event_handler, self.path, recursive = True)
+        event_log_handler = LoggingEventHandler()
+        event_crawl_handler = CrawlerHandler()
+        self.observer.schedule(event_log_handler, self.path, recursive = True)
+        self.observer.schedule(event_crawl_handler, self.path, recursive = True)
         self.observer.start()
 
         try: 
