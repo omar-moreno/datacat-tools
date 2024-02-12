@@ -1,5 +1,13 @@
 
+import datacat
 import logging
+import os
+import time
+
+from CDMSDataCatalog import CDMSDataCatalog
+from datacat.error import DcClientException
+from datetime import date
+from datetime import datetime
 
 class Crawler:
 
@@ -21,8 +29,12 @@ class Crawler:
     
             # This retrieves all datasets in the path excluding folders. If the path
             # doesn't contain a dataset, an empty list is returned.
-            query = "scanStatus = 'UNSCANNED' or scanStatus = 'MISSING'" 
+            #query = "scanStatus = 'UNSCANNED' or scanStatus = 'MISSING'" 
+            query = ""
             datasets = self.dc.client.search(path, site=self.site, query=query)
+        except DcClientException as err: 
+            logging.error('%s: %s', err, path)
+            return []
         except requests.exceptions.HTTPError as err:
             logging.error('HTTPError %s' % err)
             return []
@@ -54,7 +66,7 @@ class Crawler:
                         payload['scanStatus'] = 'MISSING'
                         logging.info('File %s at %s is MISSING.', loc.resource, loc.site)
                     
-                    #try: 
-                    #    self.dc.client.patch_dataset(dataset.path, payload, site=self.site)
-                    #except DcException as err:
-                    #    logging.error('DataCat Error: %s', err)
+                    try: 
+                        self.dc.client.patch_dataset(dataset.path, payload, site=self.site)
+                    except DcException as err:
+                        logging.error('DataCat Error: %s', err)
