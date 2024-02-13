@@ -14,9 +14,9 @@ class Listener:
 
     def __init__(self, config):
 
-        if 'path' not in config['listener']: 
+        if 'paths' not in config['listener']: 
             raise ValueError('Failed to provide filsystem path to watch.')
-        self.path = config['listener']['path']
+        self.paths = config['listener']['paths']
 
         self.config = config
 
@@ -25,7 +25,8 @@ class Listener:
                             format='[%(levelname)s] %(asctime)s : %(message)s',
                             datefmt='%Y-%m-%d %H:%M:%S')
 
-        logging.info('Watching path %s', self.path)
+        for path in self.paths: 
+            logging.info('Watching path %s', path)
 
         self.observer = PollingObserver()
 
@@ -34,8 +35,9 @@ class Listener:
         logging.info('Running crawler ...')
         event_log_handler = LoggingEventHandler()
         event_crawl_handler = CrawlerHandler(self.config)
-        self.observer.schedule(event_log_handler, self.path, recursive = True)
-        self.observer.schedule(event_crawl_handler, self.path, recursive = True)
+        for path in self.paths: 
+            self.observer.schedule(event_log_handler, path, recursive = True)
+            self.observer.schedule(event_crawl_handler, path, recursive = True)
         self.observer.start()
 
         try: 
