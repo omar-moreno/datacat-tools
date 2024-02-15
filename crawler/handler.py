@@ -14,7 +14,8 @@ class CrawlerHandler(watchdog.events.FileSystemEventHandler):
         self.crawler = Crawler(dc, config)
     
     def on_any_event(self, event):
-        if event.event_type == 'deleted' or event.event_type == 'created':
+        if event.event_type != 'moved':
+            if (event.event_type == 'modified') & event.is_directory: return
             path = event.src_path
             path = os.path.dirname(path[path.find('/CDMS'):])
             self.crawler.crawl(path)
