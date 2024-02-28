@@ -51,4 +51,4 @@ RUN git clone https://github.com/omar-moreno/scdms-crawler.git
 # Start the crawler when the container is run. The directory /local is expected
 # to point to the current working directory from which the container is run.
 WORKDIR scdms-crawler
-CMD [ "python", "crawler", "-c", "/local/config.toml"]
+CMD [ "python", "watcher", "-c", "/local/config.toml"]
