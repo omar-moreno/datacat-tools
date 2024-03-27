@@ -3,7 +3,7 @@ import os
 import watchdog.events
 
 from CDMSDataCatalog import CDMSDataCatalog
-from crawler import Crawler
+from crawler.crawler import Crawler
 
 class CrawlerHandler(watchdog.events.FileSystemEventHandler):
 
