@@ -93,6 +93,7 @@ class Crawler:
                 locations = dataset.locations
             except AttributeError as  err: 
                 logging.error('AttributeError: %s', err)
+                logging.info("Dataset %s doesn't have a location.", dataset)
                 continue
 
             for loc in locations:
