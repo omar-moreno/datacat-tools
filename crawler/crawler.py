@@ -1,62 +1,106 @@
 
-import datacat
 import logging
 import os
 import time
 
+import datacat 
 from CDMSDataCatalog import CDMSDataCatalog
-from datacat.error import DcClientException
-from datetime import date
 from datetime import datetime
 
 class Crawler:
+    """
+        SuperCDMS data catalog crawler used to perform various checks on the
+        registered datasets in the given path.
 
-    def __init__(self, dc : CDMSDataCatalog, config):
+        Attributes: 
+            dc (CDMSDataCatalog): An instance of the CDMSDataCatalog client.
+            config (dict): Dictionary with parameters used to configure this
+                class.
+    """
+
+    def __init__(self, dc : CDMSDataCatalog, config : dict):
+        """
+        Constructor of the class Crawler.
+
+        Args:
+            dc (CDMSDataCatalog): An instance of the CDMSDataCatalog client.
+            config (dict): Dictionary with parameters used to configure this
+                class.
+        """
         self.dc = dc
 
-        if 'fs_prefix' not in config['crawler']: 
-            raise ValueError('Failed to provide dataset prefix on filesystem.')
-        self.fs_prefix = config['crawler']['fs_prefix']
-
-        self.site = 'SLAC'
+        self.site = 'All'
         if 'site' in config['crawler']:
             self.site = config['crawler']['site']
 
-    def get_dataset(self, path : str = '/CDMS'):
+        self.query = ''
+        if 'query' in config['crawler']: 
+            self.query = config['crawler']['query']
+
+    def get_dataset(self, path : str = '/CDMS', site : str = 'All'):
+        """
+        Recursively retrieve all datasets from the given path with a location
+        as the specified site. If the path doesn't exist or the data catalog
+        is down, an exception is thrown which results in an empty list being
+        returned and an error logged.
+
+        Args: 
+            path (str): The data catalog path to the dataset.
+            site (str): The site (SLAC, SNOLAB, etc.) of a dataset location.
+
+        Returns: 
+            list[]: A list containing all datasets in the given path.
+        """
         try: 
-            # Get the childen in the path to check if a folder needs to be explored
-            children = self.dc.client.children(path)
-    
-            # This retrieves all datasets in the path excluding folders. If the path
-            # doesn't contain a dataset, an empty list is returned.
             #query = "scanStatus = 'UNSCANNED' or scanStatus = 'MISSING'" 
-            query = ""
-            datasets = self.dc.client.search(path, site=self.site, query=query)
-        except DcClientException as err: 
+            # First retrieve all dataset within the top level directory of the 
+            # given path.
+            datasets = self.dc.client.search(path, query=self.query)
+            # This retrieves recursively retrieves the datasets of all 
+            # containers in the path.
+            datasets.extend(self.dc.client.search(path+'**', query=self.query))
+        except datacat.error.DcClientException as err: 
             logging.error('%s: %s', err, path)
             return []
         except requests.exceptions.HTTPError as err:
             logging.error('HTTPError %s' % err)
             return []
 
-        # Loop through all the children and recursively retrieve the datasets.
-        for child in children:
-            if isinstance(child, datacat.model.Folder):
-                datasets.extend(self.get_dataset(child.path))
-                continue
-
         logging.info('Total datasets in %s : %s', path, len(datasets))
         return datasets
 
-    def crawl(self, path : str = '/CDMS'):
-        datasets = self.get_dataset(path)
+    def crawl(self, path : str = '/CDMS') -> None:
+        """
+        Perform a series of checks on all datasets within a path and update the 
+        scan status of a dataset to reflect the results.  Currently, if a 
+        dataset exist, the size of the file and the locationScanned timestamp
+        are both updated.  If a dataset contains a location with site SLAC, 
+        the location is made the 'Master' location. If a dataset at SNOLAB is found
+        to be missing but a copy exist at SLAC, the dataset is marked as 'ARCHIVED'.
+
+        Args: 
+            path (str): The data catalog path to the dataset.
+
+        """
+        try: 
+            datasets = self.get_dataset(path, self.site)
+        except requests.exceptions.HTTPError as err:
+            logging.error('HTTPError %s' % err)
+            return
 
         for dataset in datasets:
-            for loc in dataset.locations:
-                if loc.site == self.site: 
+            try: 
+                locations = dataset.locations
+            except AttributeError as  err: 
+                logging.error('AttributeError: %s', err)
+                logging.info("Dataset %s doesn't have a location.", dataset)
+                continue
+
+            for loc in locations:
+                if loc.site == self.site:
                     payload = { 'locationScanned': datetime.utcnow().isoformat()+"Z" }
-                    if os.path.exists(self.fs_prefix+loc.resource):
-                        stat = os.stat(self.fs_prefix+loc.resource)
+                    if os.path.exists(loc.resource):
+                        stat = os.stat(loc.resource)
                         if loc.site == 'SLAC': payload['master'] = True
                         payload.update( {'scanStatus': 'OK', 'size': stat.st_size } )
                     elif loc.site == 'SNOLAB' and len(dataset.locations) > 1:
@@ -64,9 +108,9 @@ class Crawler:
                         logging.info('File %s at %s has been ARCHIVED.', loc.resource, loc.site)
                     else: 
                         payload['scanStatus'] = 'MISSING'
-                        logging.info('File %s at %s is MISSING.', loc.resource, loc.site)
+                        logging.info('File %s at %s is %s', loc.resource, loc.site, payload['scanStatus'])
                     
-                    try: 
+                    try:
                         self.dc.client.patch_dataset(dataset.path, payload, site=self.site)
                     except DcException as err:
                         logging.error('DataCat Error: %s', err)
