@@ -82,10 +82,20 @@ class Crawler:
             path (str): The data catalog path to the dataset.
 
         """
-        datasets = self.get_dataset(path, self.site)
+        try: 
+            datasets = self.get_dataset(path, self.site)
+        except requests.exceptions.HTTPError as err:
+            logging.error('HTTPError %s' % err)
+            return
 
         for dataset in datasets:
-            for loc in dataset.locations:
+            try: 
+                locations = dataset.locations
+            except AttributeError as  err: 
+                logging.error('AttributeError: %s', err)
+                continue
+
+            for loc in locations:
                 if loc.site == self.site:
                     payload = { 'locationScanned': datetime.utcnow().isoformat()+"Z" }
                     if os.path.exists(loc.resource):
@@ -99,7 +109,7 @@ class Crawler:
                         payload['scanStatus'] = 'MISSING'
                         logging.info('File %s at %s is %s', loc.resource, loc.site, payload['scanStatus'])
                     
-                    try: 
+                    try:
                         self.dc.client.patch_dataset(dataset.path, payload, site=self.site)
                     except DcException as err:
                         logging.error('DataCat Error: %s', err)
