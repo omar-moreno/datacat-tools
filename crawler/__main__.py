@@ -28,14 +28,15 @@ with open(args.config, 'rb') as f:
 dc_config = None
 if 'config' in config['catalog']: 
     dc_config = config['catalog']['config']
+logging.info('Configuring the DC client from %s', dc_config)
 
 dc = CDMSDataCatalog(config_file=dc_config)
 crawler = Crawler(dc, config)
 
 while True: 
     paths = []
+    logging.info('The following paths will be processed: %s', dc.ls())
     for path in dc.ls():
-
         paths.extend(dc.ls(path))
 
     for path in paths:
