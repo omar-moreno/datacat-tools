@@ -31,8 +31,7 @@ RUN apt-get update &&  \
 
 # Install python dependencies.
 RUN pip install \
-    tomli \
-    watchdog
+    tomli 
 
 # Install all external packages into /opt.
 WORKDIR /opt
@@ -46,9 +45,9 @@ RUN cd DataCat && \
 
 # Clone the crawler into /opt.
 WORKDIR /opt
-RUN git clone https://github.com/omar-moreno/scdms-crawler.git 
+RUN git clone git@gitlab.com:supercdms/CompInfrastructure/datacat-tools.git 
 
 # Start the crawler when the container is run. The directory /local is expected
 # to point to the current working directory from which the container is run.
-WORKDIR scdms-crawler
-CMD [ "python", "watcher", "-c", "/local/config.toml"]
+WORKDIR datacat-tools
+CMD [ "python", "crawler", "-c", "/local/config.toml"]
