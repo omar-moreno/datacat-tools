@@ -114,3 +114,37 @@ class Crawler:
                         self.dc.client.patch_dataset(dataset.path, payload, site=self.site)
                     except DcException as err:
                         logging.error('DataCat Error: %s', err)
+
+    def update_resource(self, path : str = '/CDMS', prefix : str): 
+
+        try: 
+            datasets = self.get_dataset(path, self.site)
+        except requests.exceptions.HTTPError as err:
+            logging.error('HTTPError %s' % err)
+            return
+
+        for dataset in datasets:
+            try: 
+                locations = dataset.locations
+            except AttributeError as  err: 
+                logging.error('AttributeError: %s', err)
+                logging.info("Dataset %s doesn't have a location.", dataset)
+                continue
+
+            for loc in locations:
+                    payload = { 'locationScanned': datetime.utcnow().isoformat()+"Z" }
+                if loc.site == self.site:
+                    new_resource = prefix+dataset.path
+                    if os.path.exists(new_resource)
+                        stat = os.stat(new_resource)
+                        payload.update( {'scanStatus': 'OK', 'size': stat.st_size, 'resource': new_resource } )
+                    else: 
+                        payload['scanStatus'] = 'MISSING'
+                        logging.info('File %s at %s is %s', loc.resource, loc.site, payload['scanStatus'])
+
+                    '''
+                    try:
+                        self.dc.client.patch_dataset(dataset.path, payload, site=self.site)
+                    except DcException as err:
+                        logging.error('DataCat Error: %s', err)
+                    '''
