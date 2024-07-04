@@ -5,6 +5,7 @@ import time
 
 import datacat 
 from CDMSDataCatalog import CDMSDataCatalog
+from datacat.error import DcException
 from datetime import datetime
 
 class Crawler:
@@ -55,10 +56,10 @@ class Crawler:
             #query = "scanStatus = 'UNSCANNED' or scanStatus = 'MISSING'" 
             # First retrieve all dataset within the top level directory of the 
             # given path.
-            datasets = self.dc.client.search(path, query=self.query)
+            datasets = self.dc.client.search(path, query=self.query, site=site)
             # This retrieves recursively retrieves the datasets of all 
             # containers in the path.
-            datasets.extend(self.dc.client.search(path+'**', query=self.query))
+            datasets.extend(self.dc.client.search(path+'**', query=self.query, site=site))
         except datacat.error.DcClientException as err: 
             logging.error('%s: %s', err, path)
             return []
@@ -113,4 +114,4 @@ class Crawler:
                     try:
                         self.dc.client.patch_dataset(dataset.path, payload, site=self.site)
                     except DcException as err:
-                        logging.error('DataCat Error: %s', err)
+                        logging.error('DataCat Error: %s when patching path %s', err, dataset.path)
