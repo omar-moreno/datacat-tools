@@ -1,4 +1,6 @@
+import os
 
+from CDMSDataCatalog import CDMSDataCatalog
 
 def get_dataset(dc : CDMSDataCatalog, path : str = '/CDMS', site : str = 'All'):
     """
@@ -25,15 +27,21 @@ def get_dataset(dc : CDMSDataCatalog, path : str = '/CDMS', site : str = 'All'):
     except datacat.error.DcClientException as err:
             logging.error('%s: %s', err, path)
             return []
-        except requests.exceptions.HTTPError as err:
+    except requests.exceptions.HTTPError as err:
             logging.error('HTTPError %s' % err)
             return []
 
     logging.info('Total datasets in %s : %s', path, len(datasets))
     return datasets
 
-def register_files(dc : CDMSDataCatalog, path : str, site : str = 'SLAC'):
+def register_files(dc : CDMSDataCatalog, datasets, path : str, site : str = 'SLAC'):
+
+    # List of files that are registered
+    registered_files = [dataset.path for dataset in datasets]
 
     files = [os.path.join(dirpath, f) for (dirpath, dirnames, filenames) in
-             os.walk(path) for f in filesnames]
-    print(files)
+             os.walk(path) for f in filenames]
+    for f in files:
+        if f[f.find('/CDMS'):] in registered_files:
+            print('File is registered.')
+
