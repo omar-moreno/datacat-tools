@@ -52,6 +52,7 @@ def register_files(dc : CDMSDataCatalog, dc_path : str, path : str,  site : str 
     files = [os.path.join(dirpath, f) for (dirpath, dirnames, filenames) in
              os.walk(path) for f in filenames]
 
+    not_registered_paths ={}
     for f in files:
         fpath = f[f.find('/CDMS'):]
         if fpath not in registered_files:
@@ -61,5 +62,11 @@ def register_files(dc : CDMSDataCatalog, dc_path : str, path : str,  site : str 
                 print('An entry in the DC exist for', f, '. Adding a new location.')
                 dc.client.mkloc(fpath, site, f)
             else:
-                print('File', f,'is not registered')
+                directory = os.path.dirname(f)
+                if directory not in not_registered_paths: 
+                    not_registered_paths[directory] = 1
+                else:
+                    not_registered_paths[directory] += 1
 
+    for key, val in not_registered_paths.items(): 
+        print(key, ':', val)
