@@ -1,6 +1,7 @@
 import argparse
-import tomli
 import logging
+import time
+import tomli
 
 from crawler import Crawler
 from CDMSDataCatalog import CDMSDataCatalog
@@ -38,15 +39,31 @@ if "config" in config["catalog"]:
     dc_config = config["catalog"]["config"]
 logging.info("Configuring the DC client from %s", dc_config)
 
+excluded_paths = []
+if "exclude" in config["crawler"]:
+    excluded_paths = config["crawler"]["exclude"]
+
 dc = CDMSDataCatalog(config_file=dc_config)
 crawler = Crawler(dc, config)
 
-while True:
-    paths = []
-    logging.info("The following paths will be processed: %s", dc.ls())
-    for path in dc.ls():
-        paths.extend(dc.ls(path))
+paths = None
+while not paths:
+    paths = dc.ls()
+    if not paths:
+        time.sleep(10)
 
+logging.info("Paths: %s", paths)
+paths = list(set(paths).difference(excluded_paths))
+
+while True:
     for path in paths:
-        logging.info("Processing %s", path)
-        crawler.crawl(path)
+        cpaths = dc.ls(path)
+        if not cpaths:
+            logging.info("Skipping path %s", cpaths)
+            continue
+        for cpath in cpaths:
+            try:
+                logging.info("Processing %s", cpath)
+                crawler.crawl(cpath)
+            except Exception:
+                logging.info("Skipping path after exception %s", cpaths)
