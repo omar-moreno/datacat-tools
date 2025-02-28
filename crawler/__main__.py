@@ -1,5 +1,6 @@
 import argparse
 import logging
+import sys
 import time
 import tomli
 
@@ -7,9 +8,8 @@ from crawler import Crawler
 from CDMSDataCatalog import CDMSDataCatalog
 from datetime import date
 
-log_fn = "%s_crawler.log" % date.today().isoformat()
 logging.basicConfig(
-    filename=log_fn,
+    stream=sys.stdout,
     level=logging.INFO,
     format="[%(levelname)s] %(asctime)s : %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
