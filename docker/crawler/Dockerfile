@@ -21,6 +21,10 @@ RUN mkdir -p /root/.ssh/ && \
 # Clone the data catalog repo into the itermediate image.
 RUN git clone git@gitlab.com:supercdms/DataHandling/DataCat.git
 
+# Clone the datacat-tools repo into the itermediate image. This repo contains
+# the crawler.
+RUN git clone -b develop git@gitlab.com:supercdms/CompInfrastructure/datacat-tools.git 
+
 # This is final base image
 FROM python:3.8
 
@@ -45,9 +49,10 @@ RUN cd DataCat && \
 
 # Clone the crawler into /opt.
 WORKDIR /opt
-RUN git clone git@gitlab.com:supercdms/CompInfrastructure/datacat-tools.git 
+
+COPY --from=intermediate /datacat-tools datacat-tools
 
 # Start the crawler when the container is run. The directory /local is expected
 # to point to the current working directory from which the container is run.
 WORKDIR datacat-tools
-CMD [ "python", "crawler", "-c", "/local/config.toml"]
+CMD ["python3", "crawler", "-c", "/opt/config/config.toml"]
