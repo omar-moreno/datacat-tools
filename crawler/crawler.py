@@ -38,6 +38,8 @@ class Crawler:
         if "query" in config["crawler"]:
             self.query = config["crawler"]["query"]
 
+        self.missing_files = set()
+
     def get_dataset(self, path: str = "/CDMS", site: str = "All"):
         """
         Recursively retrieve all datasets from the given path with a location
@@ -94,9 +96,10 @@ class Crawler:
         for dataset in datasets:
             try:
                 locations = dataset.locations
+                logging.info('Dataset: %s', dataset)
             except AttributeError as err:
                 logging.error("AttributeError: %s", err)
-                logging.info("Dataset %s doesn't have a location.", dataset)
+                logging.error("Dataset %s doesn't have a location.", dataset)
                 continue
 
             for loc in locations:
@@ -114,19 +117,20 @@ class Crawler:
                     elif loc.site == "SNOLAB" and len(dataset.locations) > 1:
                         payload["scanStatus"] = "ARCHIVED"
                         logging.info(
-                            "File %s at %s has been ARCHIVED.",
+                            "%s %s from %s",
+                            payload["scanStatus"],
                             loc.resource,
-                            loc.site,
+                            loc.site
                         )
                     else:
                         payload["scanStatus"] = "MISSING"
                         logging.info(
-                            "File %s at %s is %s",
-                            loc.resource,
-                            loc.site,
+                            "%s %s from %s",
                             payload["scanStatus"],
+                            loc.resource,
+                            loc.site
                         )
-
+                        self.missing_files.add(dataset.path)
                     try:
                         self.dc.client.patch_dataset(
                             dataset.path, payload, site=self.site
@@ -137,3 +141,4 @@ class Crawler:
                             err,
                             dataset.path,
                         )
+        logging.info('Missing datasets: %s', len(self.missing_files))

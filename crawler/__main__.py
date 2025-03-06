@@ -37,11 +37,12 @@ with open(args.config, "rb") as f:
 dc_config = None
 if "config" in config["catalog"]:
     dc_config = config["catalog"]["config"]
-logging.info("Configuring the DC client from %s", dc_config)
+logging.debug("Configuring the DC client from %s", dc_config)
 
 excluded_paths = []
 if "exclude" in config["crawler"]:
     excluded_paths = config["crawler"]["exclude"]
+logging.debug("Excluded paths %s", excluded_paths)
 
 dc = CDMSDataCatalog(config_file=dc_config)
 crawler = Crawler(dc, config)
@@ -52,18 +53,18 @@ while not paths:
     if not paths:
         time.sleep(10)
 
-logging.info("Paths: %s", paths)
+logging.debug("Paths: %s", paths)
 paths = list(set(paths).difference(excluded_paths))
 
 while True:
     for path in paths:
         cpaths = dc.ls(path)
         if not cpaths:
-            logging.info("Skipping path %s", cpaths)
+            logging.error("Skipping: %s", cpaths)
             continue
         for cpath in cpaths:
             try:
-                logging.info("Processing %s", cpath)
+                logging.debug("Processing %s", cpath)
                 crawler.crawl(cpath)
             except Exception:
-                logging.info("Skipping path after exception %s", cpaths)
+                logging.error("Skipping path after exception %s", cpath)
