@@ -11,16 +11,3 @@ spec:
     metadata:
       labels:
         app: crawler
-    spec:
-      containers:
-      - name: crawler
-        image: omarmoreno/crawler:0.1.0
-        imagePullPolicy: Always
-        volumeMounts:
-          - name: config-paths
-            mountPath: /opt/config
-      volumes:
-        - name: config-paths
-          hostPath:
-            path: /opt/config
-        
