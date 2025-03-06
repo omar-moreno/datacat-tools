@@ -1,0 +1,18 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: 
+  name: crawler
+spec:
+  template:
+    spec:
+      containers:
+      - name: mini-crawler
+        image: omarmoreno/crawler:0.1.0
+        imagePullPolicy: Always
+        volumeMounts:
+          - name: config-paths
+            mountPath: /opt/config
+      volumes:
+        - name: config-paths
+          hostPath:
+            path: /opt/config
