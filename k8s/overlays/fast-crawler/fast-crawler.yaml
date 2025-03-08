@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: 
+  name: crawler
+spec:
+  template:
+    spec:
+      containers:
+      - name: fast-crawler
+        image: omarmoreno/crawler:0.1.0
+        imagePullPolicy: Always
+        volumeMounts:
+          - name: config-path
+            mountPath: /opt/config
+            subPath: workarea/software/crawler/fast_crawler_config
+          - name: fs-ddn-sdf-group
+            mountPath: /fs/ddn/sdf/group/supercdms/data
+            subPath: data
+          - name: sdf-group
+            mountPath: /sdf/group/supercdms/data
+            subPath: data
+      volumes:
+        - name: config-path
+          persistentVolumeClaim:
+            claimName: sdf-data-supercdms-config-ro
+        - name: fs-ddn-sdf-group
+          persistentVolumeClaim:
+            claimName: fs-ddn-sdf-group-supercdms-ro
+        - name: sdf-group
+          persistentVolumeClaim:
+            claimName: sdf-group-supercdms-ro
+

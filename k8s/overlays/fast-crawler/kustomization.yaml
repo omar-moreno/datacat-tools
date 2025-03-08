@@ -1,0 +1,14 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: fast-crawler
+
+commonLabels:
+  app: fast-crawler
+
+resources:
+- ../../base
+- pvc.yaml
+
+patches:
+- path: fast-crawler.yaml
