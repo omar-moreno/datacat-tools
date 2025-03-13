@@ -96,7 +96,6 @@ class Crawler:
         for dataset in datasets:
             try:
                 locations = dataset.locations
-                logging.info('Dataset: %s', dataset)
             except AttributeError as err:
                 logging.error("AttributeError: %s", err)
                 logging.error("Dataset %s doesn't have a location.", dataset)
@@ -141,4 +140,3 @@ class Crawler:
                             err,
                             dataset.path,
                         )
-        logging.info('Missing datasets: %s', len(self.missing_files))

@@ -68,3 +68,4 @@ while True:
                 crawler.crawl(cpath)
             except Exception:
                 logging.error("Skipping path after exception %s", cpath)
+    logging.info('Missing datasets: %s', len(self.missing_files))
