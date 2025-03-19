@@ -7,13 +7,12 @@ import tomli
 from crawler import Crawler
 from CDMSDataCatalog import CDMSDataCatalog
 from datetime import date
+from logfmter import Logfmter
 
-logging.basicConfig(
-    stream=sys.stdout,
-    level=logging.INFO,
-    format="[%(levelname)s] %(asctime)s : %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-)
+handler = logging.StreamHandler()
+handler.setFormatter(Logfmter())
+
+logging.basicConfig(level=logging.INFO, handlers=[handler])
 
 # Parse the command line arguments
 parser = argparse.ArgumentParser(
@@ -68,4 +67,7 @@ while True:
                 crawler.crawl(cpath)
             except Exception:
                 logging.error("Skipping path after exception %s", cpath)
-    logging.info('Missing datasets: %s', len(self.missing_files))
+            logging.info(
+                "Missing datasets:",
+                extra={"total": len(crawler.missing_files), "path": cpath},
+            )

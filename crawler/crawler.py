@@ -71,7 +71,9 @@ class Crawler:
             logging.error("HTTPError %s" % err)
             return []
 
-        logging.info("Total datasets in %s : %s", path, len(datasets))
+        logging.info(
+            "Total datasets", extra={"path": path, "total": len(datasets)}
+        )
         return datasets
 
     def crawl(self, path: str = "/CDMS") -> None:
@@ -87,6 +89,7 @@ class Crawler:
             path (str): The data catalog path to the dataset.
 
         """
+        self.missing_files = set()
         try:
             datasets = self.get_dataset(path, self.site)
         except requests.exceptions.HTTPError as err:
@@ -116,18 +119,20 @@ class Crawler:
                     elif loc.site == "SNOLAB" and len(dataset.locations) > 1:
                         payload["scanStatus"] = "ARCHIVED"
                         logging.info(
-                            "%s %s from %s",
-                            payload["scanStatus"],
-                            loc.resource,
-                            loc.site
+                            {
+                                "status": payload["scanStatus"],
+                                "file": loc.resource,
+                                "site": loc.site,
+                            }
                         )
                     else:
                         payload["scanStatus"] = "MISSING"
                         logging.info(
-                            "%s %s from %s",
-                            payload["scanStatus"],
-                            loc.resource,
-                            loc.site
+                            {
+                                "status": payload["scanStatus"],
+                                "file": loc.resource,
+                                "site": loc.site,
+                            }
                         )
                         self.missing_files.add(dataset.path)
                     try:
