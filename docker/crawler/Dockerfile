@@ -35,7 +35,8 @@ RUN apt-get update &&  \
 
 # Install python dependencies.
 RUN pip install \
-    tomli 
+    tomli \
+    logfmter
 
 # Install all external packages into /opt.
 WORKDIR /opt
