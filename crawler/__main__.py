@@ -29,6 +29,15 @@ def load_config(config_path):
 
     return config_data
 
+def initialize_catalog(config_data):
+    """Initialize the CDMSDataCatalog and crawler."""
+    dc_config = config_data["catalog"].get("config")
+
+    excluded_paths = config_data["crawler"].get("exclude", [])
+    logging.debug(f"Initializing DC client from {dc_config} with excluded paths: {excluded_paths}")
+
+    dc = CDMSDataCatalog(config_file=dc_config)
+    return dc, excluded_paths
 
 @click.command()
 @click.option(
@@ -42,19 +51,7 @@ def main(config):
     """Data catalog crawler used by the SCDMS experiment."""
 
     config_data = load_config(config)
-
-    dc_config = None
-    if "config" in config_data["catalog"]:
-        dc_config = config_data["catalog"]["config"]
-    logging.debug("Configuring the DC client from %s", dc_config)
-
-    excluded_paths = []
-    if "exclude" in config_data["crawler"]:
-        excluded_paths = config_data["crawler"]["exclude"]
-    logging.debug("Excluded paths %s", excluded_paths)
-
-    dc = CDMSDataCatalog(config_file=dc_config)
-    crawler = Crawler(dc, config_data)
+    dc, excluded_paths = initialize_catalog(config_data)
 
     paths = None
     while not paths:
@@ -64,6 +61,9 @@ def main(config):
 
     logging.debug("Paths: %s", paths)
     paths = list(set(paths).difference(excluded_paths))
+
+    # Instantiate the crawler
+    crawler = Crawler(dc, config_data)
 
     while True:
         for path in paths:
