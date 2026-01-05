@@ -16,6 +16,20 @@ logging.basicConfig(
 )
 
 
+def load_config(config_path):
+    """Load configuration from a TOML file."""
+    with open(config_path, "rb") as f:
+        config_data = tomli.load(f)
+
+    if "catalog" not in config_data:
+        logging.error(
+            "[ crawler ] 'catalog' section is missing in the configuration file."
+        )
+        sys.exit(1)
+
+    return config_data
+
+
 @click.command()
 @click.option(
     "-c",
@@ -27,22 +41,20 @@ logging.basicConfig(
 def main(config):
     """Data catalog crawler used by the SCDMS experiment."""
 
-    # Load config from TOML file
-    with open(config, "rb") as f:
-        config = tomli.load(f)
+    config_data = load_config(config)
 
     dc_config = None
-    if "config" in config["catalog"]:
-        dc_config = config["catalog"]["config"]
+    if "config" in config_data["catalog"]:
+        dc_config = config_data["catalog"]["config"]
     logging.debug("Configuring the DC client from %s", dc_config)
 
     excluded_paths = []
-    if "exclude" in config["crawler"]:
-        excluded_paths = config["crawler"]["exclude"]
+    if "exclude" in config_data["crawler"]:
+        excluded_paths = config_data["crawler"]["exclude"]
     logging.debug("Excluded paths %s", excluded_paths)
 
     dc = CDMSDataCatalog(config_file=dc_config)
-    crawler = Crawler(dc, config)
+    crawler = Crawler(dc, config_data)
 
     paths = None
     while not paths:
