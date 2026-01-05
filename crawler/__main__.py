@@ -4,6 +4,7 @@ import time
 
 import click
 import tomli
+
 from CDMSDataCatalog import CDMSDataCatalog
 
 from crawler import Crawler
@@ -29,15 +30,19 @@ def load_config(config_path):
 
     return config_data
 
+
 def initialize_catalog(config_data):
     """Initialize the CDMSDataCatalog and crawler."""
     dc_config = config_data["catalog"].get("config")
 
     excluded_paths = config_data["crawler"].get("exclude", [])
-    logging.debug(f"Initializing DC client from {dc_config} with excluded paths: {excluded_paths}")
+    logging.debug(
+        f"Initializing DC client from {dc_config} with excluded paths: {excluded_paths}"
+    )
 
     dc = CDMSDataCatalog(config_file=dc_config)
     return dc, excluded_paths
+
 
 @click.command()
 @click.option(
@@ -53,30 +58,31 @@ def main(config):
     config_data = load_config(config)
     dc, excluded_paths = initialize_catalog(config_data)
 
-    paths = None
+    paths = []
     while not paths:
-        paths = dc.ls()
+        paths = dc.ls() or []
         if not paths:
             time.sleep(10)
 
-    logging.debug("Paths: %s", paths)
-    paths = list(set(paths).difference(excluded_paths))
+    logging.debug(f"Paths: {paths}")
+    paths = list(set(paths) - set(excluded_paths))
 
     # Instantiate the crawler
     crawler = Crawler(dc, config_data)
 
     while True:
         for path in paths:
-            cpaths = dc.ls(path)
+            cpaths = dc.ls(path) or []
             if not cpaths:
-                logging.error("Skipping: %s", cpaths)
+                logging.error(f"Skipping: {path} - no contents found.")
                 continue
+
             for cpath in cpaths:
                 try:
-                    logging.debug("Processing %s", cpath)
+                    logging.debug(f"Processing {cpath}")
                     crawler.crawl(cpath)
-                except Exception:
-                    logging.error("Skipping path after exception %s", cpath)
+                except Exception as e:
+                    logging.error(f"Skipping {cpath} after exception: {e}")
         # logging.info('Missing datasets: %s', len(self.missing_files))
 
 
