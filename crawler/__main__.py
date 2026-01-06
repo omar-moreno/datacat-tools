@@ -52,7 +52,8 @@ def initialize_catalog(config_data: Dict) -> Tuple[CDMSDataCatalog, List[str]]:
     type=click.Path(exists=True, dir_okay=False),
     help="Path to TOML based configuration file.",
 )
-def main(config: str) -> None:
+@click.option("-p", "--path", help="Scan a single path instead of all paths.")
+def main(config: str, path: Optional[str]) -> None:
     """Data catalog crawler used by the SCDMS experiment."""
 
     config_data: Dict = load_config(config)
@@ -60,14 +61,20 @@ def main(config: str) -> None:
         config_data
     )  # type: CDMSDataCatalog, List[str]
 
-    paths: List[str] = []
-    while not paths:
-        paths = dc.ls() or []
-        if not paths:
-            time.sleep(10)
+    paths: List[str]
+    if path:
+        logging.info(f"Scanning single path: {path}")
+        paths = [path]
+    else:
+        paths = []
+        while not paths:
+            paths = dc.ls() or []
+            if not paths:
+                time.sleep(10)
+
+        paths = list(set(paths) - set(excluded_paths))
 
     logging.debug(f"Paths: {paths}")
-    paths = list(set(paths) - set(excluded_paths))
 
     # Instantiate the crawler
     crawler = Crawler(dc, config_data)
