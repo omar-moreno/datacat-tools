@@ -1,10 +1,10 @@
 import logging
 import sys
 import time
+from types import Dict, List, Optional, Tuple
 
 import click
 import tomli
-
 from CDMSDataCatalog import CDMSDataCatalog
 
 from crawler import Crawler
@@ -17,10 +17,10 @@ logging.basicConfig(
 )
 
 
-def load_config(config_path):
+def load_config(config_path: str) -> Dict:
     """Load configuration from a TOML file."""
     with open(config_path, "rb") as f:
-        config_data = tomli.load(f)
+        config_data: Dict = tomli.load(f)
 
     if "catalog" not in config_data:
         logging.error(
@@ -31,11 +31,11 @@ def load_config(config_path):
     return config_data
 
 
-def initialize_catalog(config_data):
+def initialize_catalog(config_data: Dict) -> Tuple[CDMSDataCatalog, List[str]]:
     """Initialize the CDMSDataCatalog and crawler."""
-    dc_config = config_data["catalog"].get("config")
+    dc_config: Optional[str] = config_data["catalog"].get("config")
 
-    excluded_paths = config_data["crawler"].get("exclude", [])
+    excluded_paths: List[str] = config_data["crawler"].get("exclude", [])
     logging.debug(
         f"Initializing DC client from {dc_config} with excluded paths: {excluded_paths}"
     )
@@ -52,13 +52,15 @@ def initialize_catalog(config_data):
     type=click.Path(exists=True, dir_okay=False),
     help="Path to TOML based configuration file.",
 )
-def main(config):
+def main(config: str) -> None:
     """Data catalog crawler used by the SCDMS experiment."""
 
-    config_data = load_config(config)
-    dc, excluded_paths = initialize_catalog(config_data)
+    config_data: Dict = load_config(config)
+    dc, excluded_paths = initialize_catalog(
+        config_data
+    )  # type: CDMSDataCatalog, List[str]
 
-    paths = []
+    paths: List[str] = []
     while not paths:
         paths = dc.ls() or []
         if not paths:
@@ -72,7 +74,7 @@ def main(config):
 
     while True:
         for path in paths:
-            cpaths = dc.ls(path) or []
+            cpaths: List[str] = dc.ls(path) or []
             if not cpaths:
                 logging.error(f"Skipping: {path} - no contents found.")
                 continue
