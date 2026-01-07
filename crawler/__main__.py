@@ -1,7 +1,7 @@
 import logging
 import sys
 import time
-from types import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import click
 import tomli
