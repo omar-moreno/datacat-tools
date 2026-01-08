@@ -7,7 +7,7 @@ spec:
     spec:
       containers:
       - name: fast-crawler
-        image: omarmoreno/crawler:0.1.0
+        image: omarmoreno/crawler:0.2.0
         imagePullPolicy: Always
         volumeMounts:
           - name: config-path
@@ -19,6 +19,9 @@ spec:
           - name: sdf-group
             mountPath: /sdf/group/supercdms/data
             subPath: data
+          - name: sdf-data
+            mountPath: /sdf/data/supercdms/data
+            subPath: data
       volumes:
         - name: config-path
           persistentVolumeClaim:
@@ -29,4 +32,7 @@ spec:
         - name: sdf-group
           persistentVolumeClaim:
             claimName: sdf-group-supercdms-ro
+        - name: sdf-data
+          persistentVolumeClaim:
+            claimName: sdf-data-supercdms-ro
 
