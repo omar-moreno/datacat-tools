@@ -1,6 +1,5 @@
 import logging
 import os
-import time
 
 import datacat
 from CDMSDataCatalog import CDMSDataCatalog
@@ -71,7 +70,7 @@ class Crawler:
             logging.error("HTTPError %s" % err)
             return []
 
-        logging.info("Total datasets in %s : %s", path, len(datasets))
+        #logging.info("Total datasets in %s : %s", path, len(datasets))
         return datasets
 
     def crawl(self, path: str = "/CDMS") -> None:
@@ -115,12 +114,12 @@ class Crawler:
                         )
                     elif loc.site == "SNOLAB" and len(dataset.locations) > 1:
                         payload["scanStatus"] = "ARCHIVED"
-                        logging.info(
-                            "%s %s from %s",
-                            payload["scanStatus"],
-                            loc.resource,
-                            loc.site
-                        )
+                        #logging.info(
+                        #    "%s %s from %s",
+                        #    payload["scanStatus"],
+                        #    loc.resource,
+                        #    loc.site
+                        #)
                     else:
                         payload["scanStatus"] = "MISSING"
                         logging.info(
@@ -140,3 +139,6 @@ class Crawler:
                             err,
                             dataset.path,
                         )
+
+    def get_missing_datasets(self):
+        return self.missing_files
