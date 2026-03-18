@@ -87,13 +87,17 @@ def main(config: str, path: Optional[str]) -> None:
                 continue
 
             for cpath in cpaths:
+                logging.info(f"Currently scanning {cpath}")
                 try:
                     logging.debug(f"Processing {cpath}")
                     crawler.crawl(cpath)
                 except Exception as e:
                     logging.error(f"Skipping {cpath} after exception: {e}")
-        # logging.info('Missing datasets: %s', len(self.missing_files))
-
+        
+        missing_files = crawler.get_missing_datasets()
+        logging.info('Missing datasets: %s', len(missing_files))
+        for mfile in missing_files:
+            logging.info(f"MISSING {mfile}")
 
 if __name__ == "__main__":
     main()
