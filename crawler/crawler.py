@@ -122,12 +122,12 @@ class Crawler:
                         #)
                     else:
                         payload["scanStatus"] = "MISSING"
-                        logging.info(
-                            "%s %s from %s",
-                            payload["scanStatus"],
-                            loc.resource,
-                            loc.site
-                        )
+                        #logging.info(
+                        #    "%s %s from %s",
+                        #    payload["scanStatus"],
+                        #    loc.resource,
+                        #    loc.site
+                        #)
                         self.missing_files.add(dataset.path)
                     try:
                         self.dc.client.patch_dataset(
