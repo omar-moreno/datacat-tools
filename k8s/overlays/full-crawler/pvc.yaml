@@ -14,7 +14,7 @@ spec:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: fs-ddn-sdf-group-supercdms-ro
+  name: sdf-group-supercdms-ro
 spec: 
   storageClassName: fs-ddn-sdf-group-supercdms
   accessModes:
@@ -27,9 +27,9 @@ spec:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: sdf-group-supercdms-ro
+  name: sdf-data-supercdms-ro
 spec: 
-  storageClassName: fs-ddn-sdf-group-supercdms
+  storageClassName: sdf-data-supercdms
   accessModes:
     - ReadOnlyMany
   resources:
