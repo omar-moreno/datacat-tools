@@ -1,5 +1,5 @@
 # Select the temporary image and name it.
-FROM python:3.8 as intermediate
+FROM python:3.12 as intermediate
 
 MAINTAINER Omar Moreno <omoreno@slac.stanford.edu>
 
@@ -23,10 +23,10 @@ RUN git clone git@gitlab.com:supercdms/DataHandling/DataCat.git
 
 # Clone the datacat-tools repo into the itermediate image. This repo contains
 # the crawler.
-RUN git clone -b develop git@gitlab.com:supercdms/CompInfrastructure/datacat-tools.git 
+RUN git clone git@gitlab.com:supercdms/CompInfrastructure/datacat-tools.git 
 
 # This is final base image
-FROM python:3.8
+FROM python:3.12
 
 # Update the image and install dependencies.
 RUN apt-get update &&  \
